@@ -1,0 +1,608 @@
+import React, { useState, useEffect } from "react";
+
+// Types
+type AuthView = "login" | "register";
+type PropertyType = "all" | "apartment" | "villa" | "cottage" | "condo" | "house";
+
+interface Property {
+  id: number;
+  title: string;
+  price: string;
+  bedrooms: number;
+  bathrooms: number;
+  area: string;
+  image: string;
+  type: PropertyType;
+}
+
+interface FormData {
+  title: string;
+  price: string;
+  bedrooms: string;
+  bathrooms: string;
+  area: string;
+  image: string;
+  type: PropertyType;
+}
+
+export default function App() {
+  const [currentPage, setCurrentPage] = useState(window.location.hash.slice(1) || "home");
+  const [darkMode, setDarkMode] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authView, setAuthView] = useState<AuthView>("login");
+  const [filters, setFilters] = useState({
+    type: "all" as PropertyType,
+    priceMax: Infinity,
+  });
+  const [formStep, setFormStep] = useState(1);
+  const [formData, setFormData] = useState<FormData>({
+    title: "",
+    price: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
+    image: "",
+    type: "apartment",
+  });
+
+  // Language support
+  const [language, setLanguage] = useState<"en" | "es">("en");
+
+  // Translations
+  const t = {
+    en: {
+      welcome: "Find Your Dream Home",
+      submitProperty: "Submit a New Property",
+      contact: "Contact Us",
+      login: "Login",
+      register: "Register",
+      next: "Next",
+      back: "Back",
+      submit: "Submit",
+      map: "Map View",
+    },
+    es: {
+      welcome: "Encuentra Tu Hogar Soñado",
+      submitProperty: "Enviar una Nueva Propiedad",
+      contact: "Contáctanos",
+      login: "Iniciar Sesión",
+      register: "Registrarse",
+      next: "Siguiente",
+      back: "Atrás",
+      submit: "Enviar",
+      map: "Vista de Mapa",
+    },
+  };
+
+  // Update page when hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentPage(window.location.hash.slice(1));
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  // Mock property data
+  const properties: Property[] = [
+    {
+      id: 1,
+      title: "Modern Apartment in Downtown",
+      price: "$890,000",
+      bedrooms: 3,
+      bathrooms: 2,
+      area: "1,200 sqft",
+      image: "https://placehold.co/600x400/2a2a2a/e2e8f0?text=Apartment+Downtown",
+      type: "apartment",
+    },
+    {
+      id: 2,
+      title: "Luxury Villa with Pool",
+      price: "$2,500,000",
+      bedrooms: 5,
+      bathrooms: 4,
+      area: "3,500 sqft",
+      image: "https://placehold.co/600x400/2a2a2a/e2e8f0?text=Luxury+Villa",
+      type: "villa",
+    },
+    {
+      id: 3,
+      title: "Cozy Cottage by the Lake",
+      price: "$450,000",
+      bedrooms: 2,
+      bathrooms: 1,
+      area: "800 sqft",
+      image: "https://placehold.co/600x400/2a2a2a/e2e8f0?text=Cottage+Lake",
+      type: "cottage",
+    },
+    {
+      id: 4,
+      title: "Contemporary Condo in City Center",
+      price: "$750,000",
+      bedrooms: 2,
+      bathrooms: 2,
+      area: "1,000 sqft",
+      image: "https://placehold.co/600x400/2a2a2a/e2e8f0?text=Condo+City",
+      type: "condo",
+    },
+    {
+      id: 5,
+      title: "Spacious Family Home",
+      price: "$1,200,000",
+      bedrooms: 4,
+      bathrooms: 3,
+      area: "2,200 sqft",
+      image: "https://placehold.co/600x400/2a2a2a/e2e8f0?text=Family+Home",
+      type: "house",
+    },
+  ];
+
+  const propertyTypes: PropertyType[] = ["all", "apartment", "villa", "cottage", "condo", "house"];
+
+  // Filter logic
+  const filteredProperties = properties.filter((prop) => {
+    const priceNum = parseInt(prop.price.replace(/[^0-9]/g, ""));
+    return (
+      (filters.type === "all" || prop.type === filters.type) &&
+      (filters.priceMax === Infinity || priceNum <= filters.priceMax)
+    );
+  });
+
+  // Handle filter change
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === "priceMax") {
+      setFilters({ ...filters, [name]: value === "max" ? Infinity : parseInt(value) });
+    } else {
+      setFilters({ ...filters, [name]: value as PropertyType });
+    }
+  };
+
+  // Multi-Page Form Handlers
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const nextStep = () => setFormStep((prev) => prev + 1);
+  const prevStep = () => setFormStep((prev) => prev - 1);
+
+  const submitForm = () => {
+    alert("Property submitted successfully!");
+    setFormStep(1);
+    setFormData({
+      title: "",
+      price: "",
+      bedrooms: "",
+      bathrooms: "",
+      area: "",
+      image: "",
+      type: "apartment",
+    });
+  };
+
+  // Toggle dark mode
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  // Language toggle
+  const toggleLanguage = () => {
+    setLanguage((lang) => (lang === "en" ? "es" : "en"));
+  };
+
+  // Render Pages
+  const HomePage = () => (
+    <>
+      {/* Hero Section */}
+      <section className="bg-white dark:bg-gray-900 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{t[language].welcome}</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8">
+            Discover thousands of properties for sale and rent across the country.
+          </p>
+
+          {/* Search Tabs */}
+          <div className="bg-white dark:bg-gray-800 rounded shadow p-6 max-w-4xl mx-auto border dark:border-gray-700">
+            <form className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <input
+                type="text"
+                placeholder="Location"
+                className="px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              />
+              <select
+                name="type"
+                value={filters.type}
+                onChange={handleFilterChange}
+                className="px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              >
+                {propertyTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <select
+                name="priceMax"
+                value={filters.priceMax === Infinity ? "max" : filters.priceMax.toString()}
+                onChange={handleFilterChange}
+                className="px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              >
+                <option value="max">No Max</option>
+                <option value="500000">$500k</option>
+                <option value="1000000">$1M</option>
+                <option value="1500000">$1.5M</option>
+                <option value="2000000">$2M+</option>
+              </select>
+              <button
+                type="submit"
+                className="bg-indigo-600 text-white rounded hover:bg-indigo-700 transition dark:bg-indigo-500 dark:hover:bg-indigo-600"
+              >
+                Search
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Properties Section */}
+      <section className="py-12 bg-gray-50 dark:bg-gray-800">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-8">Featured Properties</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProperties.map((prop) => (
+              <div
+                key={prop.id}
+                className="bg-white dark:bg-gray-700 rounded shadow overflow-hidden border dark:border-gray-600"
+              >
+                <img src={prop.image} alt={prop.title} className="w-full h-48 object-cover" />
+                <div className="p-4">
+                  <h3 className="font-bold dark:text-white">{prop.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300">{prop.price}</p>
+                  <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span>{prop.bedrooms} Beds</span>
+                    <span>{prop.bathrooms} Baths</span>
+                    <span>{prop.area}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+
+  const BrowsePage = () => (
+    <section className="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-8 dark:text-white">Browse Properties</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProperties.map((prop) => (
+            <div
+              key={prop.id}
+              className="bg-white dark:bg-gray-700 rounded shadow overflow-hidden border dark:border-gray-600"
+            >
+              <img src={prop.image} alt={prop.title} className="w-full h-48 object-cover" />
+              <div className="p-4">
+                <h3 className="font-bold dark:text-white">{prop.title}</h3>
+                <p className="text-gray-600 dark:text-gray-300">{prop.price}</p>
+                <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span>{prop.bedrooms} Beds</span>
+                  <span>{prop.bathrooms} Baths</span>
+                  <span>{prop.area}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  const ContactPage = () => (
+    <section className="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4 max-w-md">
+        <h2 className="text-3xl font-bold mb-6 dark:text-white">{t[language].contact}</h2>
+        <form className="bg-white dark:bg-gray-800 p-6 rounded shadow border dark:border-gray-700">
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Name</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Email</label>
+            <input
+              type="email"
+              className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 dark:text-gray-300 mb-2">Message</label>
+            <textarea
+              rows={4}
+              className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition dark:bg-indigo-500 dark:hover:bg-indigo-600"
+          >
+            Send Message
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+
+  const SubmitPropertyPage = () => (
+    <section className="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4 max-w-xl">
+        <h2 className="text-3xl font-bold mb-6 dark:text-white">{t[language].submitProperty}</h2>
+        <div className="bg-white dark:bg-gray-800 p-6 rounded shadow border dark:border-gray-700">
+          {formStep === 1 && (
+            <>
+              <h3 className="text-xl font-semibold mb-4 dark:text-white">Basic Info</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                  <input
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Price</label>
+                  <input
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Property Type</label>
+                  <select
+                    name="type"
+                    value={formData.type}
+                    onChange={(e) =>
+                      setFormData({ ...formData, type: e.target.value as PropertyType })
+                    }
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  >
+                    <option value="">Select Type</option>
+                    {propertyTypes.filter(t => t !== "all").map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={nextStep}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                  >
+                    {t[language].next}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {formStep === 2 && (
+            <>
+              <h3 className="text-xl font-semibold mb-4 dark:text-white">Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Bedrooms</label>
+                  <input
+                    name="bedrooms"
+                    value={formData.bedrooms}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Bathrooms</label>
+                  <input
+                    name="bathrooms"
+                    value={formData.bathrooms}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Area (sqft)</label>
+                  <input
+                    name="area"
+                    value={formData.area}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <button
+                    onClick={prevStep}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition dark:bg-gray-600 dark:hover:bg-gray-700"
+                  >
+                    {t[language].back}
+                  </button>
+                  <button
+                    onClick={nextStep}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition dark:bg-indigo-500 dark:hover:bg-indigo-600"
+                  >
+                    {t[language].next}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {formStep === 3 && (
+            <>
+              <h3 className="text-xl font-semibold mb-4 dark:text-white">Image & Submit</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-2">Image URL</label>
+                  <input
+                    name="image"
+                    value={formData.image}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border rounded dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <button
+                    onClick={prevStep}
+                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition dark:bg-gray-600 dark:hover:bg-gray-700"
+                  >
+                    {t[language].back}
+                  </button>
+                  <button
+                    onClick={submitForm}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition dark:bg-green-500 dark:hover:bg-green-600"
+                  >
+                    {t[language].submit}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+
+  const MapPage = () => (
+    <section className="py-12 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold mb-6 dark:text-white">{t[language].map}</h2>
+        <div className="bg-gray-200 dark:bg-gray-700 h-96 flex items-center justify-center rounded shadow-inner">
+          <p className="text-gray-500 dark:text-gray-400">[Google Maps Integration Placeholder]</p>
+        </div>
+      </div>
+    </section>
+  );
+
+  // Auth Modal Component
+  const AuthModal = () => (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-lg relative dark:text-white">
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          {authView === "login" ? t[language].login : t[language].register}
+        </h2>
+        <form className="space-y-4">
+          {authView === "register" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                placeholder="John Doe"
+              />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+            <input
+              type="email"
+              className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+            <input
+              type="password"
+              className="w-full px-4 py-2 border rounded focus:outline-none dark:bg-gray-700 dark:text-white dark:border-gray-600"
+              placeholder="••••••••"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition dark:bg-indigo-500 dark:hover:bg-indigo-600"
+          >
+            {authView === "login" ? t[language].login : t[language].register}
+          </button>
+        </form>
+        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          {authView === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+          <button
+            onClick={() => setAuthView(authView === "login" ? "register" : "login")}
+            className="text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            {authView === "login" ? t[language].register : t[language].login}
+          </button>
+        </p>
+        <button
+          onClick={() => setShowAuthModal(false)}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
+        >
+          &times;
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-gray-900 dark:text-white">
+      {/* Header */}
+      <header className="bg-white dark:bg-gray-800 shadow sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="text-xl font-bold text-indigo-600 dark:text-indigo-400">DreamHomes</div>
+          <nav className="space-x-6 hidden md:flex">
+            <a href="#home" className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400">Home</a> 
+            <a href="#browse" className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400">Properties</a>
+            <a href="#map" className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400">Map</a>
+            <a href="#submit" className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400">Submit</a>
+          </nav>
+          <div className="flex space-x-4">
+            <button
+              onClick={toggleLanguage}
+              className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400"
+            >
+              {language === "en" ? "Español" : "English"}
+            </button>
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="text-gray-800 hover:text-indigo-600 dark:text-gray-200 dark:hover:text-indigo-400"
+            >
+              {darkMode ? "☀️" : "🌙"}
+            </button>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              {t[language].login}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main>
+        {currentPage === "home" && <HomePage />}
+        {currentPage === "browse" && <BrowsePage />}
+        {currentPage === "map" && <MapPage />}
+        {currentPage === "submit" && <SubmitPropertyPage />}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-6">
+        <div className="container mx-auto px-4 text-center">
+          &copy; {new Date().getFullYear()} DreamHomes. All rights reserved.
+        </div>
+      </footer>
+
+      {/* Auth Modal */}
+      {showAuthModal && <AuthModal />}
+    </div>
+  );
+}
